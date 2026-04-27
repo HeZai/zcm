@@ -1,0 +1,19 @@
+id = "zcm"
+name = "zcm"
+version = "0.1.0"
+schema_version = 1
+authors = ["Hezai <yhwyym23929@163.com>"]
+description = "Zed CSS Modules extension."
+repository = "git@github.com:HeZai/zcm.git"
+
+[language_servers.zcm]
+name = "zcm"
+languages = ["JavaScript", "TypeScript", "TSX", "CSS", "SCSS", "LESS"]
+
+[language_servers.zcm.language_ids]
+"JavaScript" = "javascript"
+"TypeScript" = "typescript"
+"TSX" = "typescriptreact"
+"CSS" = "css"
+"SCSS" = "scss"
+"LESS" = "less"
