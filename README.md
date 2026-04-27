@@ -1,6 +1,6 @@
 # zcm
 
-zcm is a CSS Modules language service extension for Zed. It is based on `cssmodules-language-server@1.5.2` and provides CSS Modules class name completion, go-to-definition, hover, and reference lookup for JavaScript, TypeScript, TSX, and common stylesheet files.
+zcm is a CSS Modules language service extension for Zed with direct support for CSS, SCSS, Sass, and Less stylesheet modules. It is based on `cssmodules-language-server@1.5.2` and provides CSS Modules class name completion, go-to-definition, hover, and reference lookup for JavaScript, TypeScript, TSX, and common stylesheet files.
 
 ## Features
 
@@ -8,9 +8,16 @@ zcm is a CSS Modules language service extension for Zed. It is based on `cssmodu
 - Go to definition: jumps from references such as `styles.foo` and `styles["foo-bar"]` to the corresponding stylesheet class declaration.
 - Hover: shows language service style information for CSS Modules class name references.
 - Find references: finds usages of the same class name from CSS Modules references in source files.
-- Reverse lookup from stylesheet declarations: running Find All References on class declarations in CSS, SCSS, or LESS files can locate source positions that import and use that class name.
+- SCSS, Sass, and Less support: resolves and serves CSS Modules from `.scss`, `.sass`, and `.less` stylesheets as first-class module sources.
+- Reverse lookup from stylesheet declarations: running Find All References on class declarations in CSS, SCSS, Sass, or Less files can locate source positions that import and use that class name.
 - Extensionless import resolution: supports relative imports that omit the stylesheet extension, such as `import styles from "./Button"` and `import styles from "./Button.module"`.
 - Default camelCase support: the extension enables `camelCase: true` by default, so `.primary-button` can be used as `styles.primaryButton`.
+
+## How zcm differs from CSS Modules Kit
+
+CSS Modules Kit provides a broader TypeScript language service plugin and tooling stack. zcm is intentionally narrower: it wraps `cssmodules-language-server@1.5.2` for users who want CSS Modules completions and navigation without adopting CSS Modules Kit project configuration.
+
+The main distinction is stylesheet coverage. zcm directly resolves CSS Modules imports for CSS, SCSS, Sass, and Less, including extensionless relative imports such as `./Button`, `./Button.module`, `./Button.module.scss`, and `./Button.module.less`. It also enables `camelCase` by default for class names such as `.primary-button`.
 
 ## Support Scope
 

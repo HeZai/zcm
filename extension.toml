@@ -3,7 +3,7 @@ name = "zcm"
 version = "0.1.0"
 schema_version = 1
 authors = ["Hezai <yhwyym23929@163.com>"]
-description = "Zed CSS Modules extension."
+description = "CSS Modules completions and navigation with SCSS, Sass, and Less support."
 repository = "https://github.com/HeZai/zcm"
 
 [language_servers.zcm]
