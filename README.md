@@ -1,6 +1,6 @@
 # zcm
 
-zcm is a CSS Modules language service extension for Zed with direct support for CSS, SCSS, Sass, and Less stylesheet modules. It is based on `cssmodules-language-server@1.5.2` and provides CSS Modules class name completion, go-to-definition, hover, and reference lookup for JavaScript, TypeScript, TSX, Vue, and common stylesheet files.
+zcm is a CSS Modules language service extension for Zed with direct support for CSS, SCSS, Sass, and Less stylesheet modules. It is based on `cssmodules-language-server@1.5.2` and provides CSS Modules class name completion, go-to-definition, hover, and reference lookup for JavaScript, TypeScript, TSX, JSX, Vue, and common stylesheet files.
 
 ## Features
 
@@ -27,9 +27,11 @@ zcm registers with the following Zed languages:
 - JavaScript
 - TypeScript
 - TSX
+- JSX
 - Vue.js
 - CSS
 - SCSS
+- SASS
 - LESS
 
 Supported stylesheet imports include:
@@ -52,10 +54,9 @@ Explicit imports of files with other extensions, such as `./foo.txt`, are ignore
 
 - Only relative imports are handled. `tsconfig` path aliases, bundler aliases, and framework-specific path aliases are not supported.
 - Supported stylesheet suffixes are limited to `css`, `scss`, `sass`, and `less`.
-- Find All References only scans JavaScript, TypeScript, TSX, and Vue files in the workspace.
+- Find All References scans common JavaScript and TypeScript source files, including JS, JSX, MJS, CJS, TS, TSX, MTS, CTS, and Vue files in the workspace.
 - Reference matching only covers CSS Modules alias forms such as `styles.foo` and `styles["foo-bar"]`, plus stylesheet class declarations imported through those aliases.
 - Plain string class names, such as `className="foo"`, are not treated as references.
-- JSX files are not registered in the initial language scope.
 
 ## License
 

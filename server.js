@@ -8,10 +8,25 @@ const { fileURLToPath, pathToFileURL } = require("node:url");
 const STYLE_EXTENSIONS = ["css", "scss", "sass", "less"];
 const CSS_MODULE_EXTENSION = "module";
 const MINIMUM_NODE_MAJOR_VERSION = 18;
-const SOURCE_EXTENSIONS = new Set([".js", ".ts", ".tsx", ".vue"]);
+const IMPORT_OR_REQUIRE_SPECIFIER_PATTERN = String.raw`(?:\s+from\s+|\s*,\s*(?:\{[^}]*\}|\*\s+as\s+[A-Za-z_$][\w$]*)\s+from\s+|\s*=\s*require(?:<any>)?\(\s*)`;
+const SOURCE_EXTENSIONS = new Set([
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".ts",
+  ".tsx",
+  ".mts",
+  ".cts",
+  ".vue",
+]);
 const SKIPPED_DIRECTORIES = new Set([
+  ".cache",
   ".git",
   ".next",
+  ".nuxt",
+  ".svelte-kit",
+  ".turbo",
   "build",
   "coverage",
   "dist",
@@ -86,9 +101,8 @@ function escapeRegExp(value) {
 }
 
 function importSpecifierRegExp(importName) {
-  const fromOrRequire = String.raw`(?:from\s+|=\s*require(?:<any>)?\()`;
   return new RegExp(
-    String.raw`\b${escapeRegExp(importName)}\s+${fromOrRequire}["']([^"']+)["']\)?`,
+    String.raw`\b${escapeRegExp(importName)}${IMPORT_OR_REQUIRE_SPECIFIER_PATTERN}["']([^"']+)["']\s*\)?`,
   );
 }
 
@@ -116,8 +130,10 @@ function findImportPathWithExtensionlessFallback(
 
 function findCssModuleImports(fileContent, directoryPath) {
   const imports = [];
-  const importRegExp =
-    /\b([A-Za-z_$][\w$]*)\s+(?:from\s+|=\s*require(?:<any>)?\(\s*)["']([^"']+)["']\s*\)?/g;
+  const importRegExp = new RegExp(
+    String.raw`\b([A-Za-z_$][\w$]*)${IMPORT_OR_REQUIRE_SPECIFIER_PATTERN}["']([^"']+)["']\s*\)?`,
+    "g",
+  );
 
   let match;
   while ((match = importRegExp.exec(fileContent)) !== null) {
@@ -136,11 +152,11 @@ function findClassReferencesInContent(fileContent, importName, className) {
   const escapedImportName = escapeRegExp(importName);
   const escapedClassName = escapeRegExp(className);
   const dotReferenceRegExp = new RegExp(
-    String.raw`(^|[^\w$])(${escapedImportName})(\s*\.\s*)(${escapedClassName})(?![\w$])`,
+    String.raw`(^|[^\w$.])(${escapedImportName})(\s*\.\s*)(${escapedClassName})(?![\w$])`,
     "g",
   );
   const bracketReferenceRegExp = new RegExp(
-    String.raw`(^|[^\w$])(${escapedImportName})(\s*\[\s*)(["'])(${escapedClassName})\4(\s*\])`,
+    String.raw`(^|[^\w$.])(${escapedImportName})(\s*\[\s*)(["'])(${escapedClassName})\4(\s*\])`,
     "g",
   );
 
@@ -174,9 +190,9 @@ function findClassReferenceAtPosition(fileContent, position) {
 
   const candidates = [];
   const dotReferenceRegExp =
-    /(^|[^\w$])([A-Za-z_$][\w$]*)(\s*\.\s*)([A-Za-z_$][\w$]*)/g;
+    /(^|[^\w$.])([A-Za-z_$][\w$]*)(\s*\.\s*)([A-Za-z_$][\w$]*)/g;
   const bracketReferenceRegExp =
-    /(^|[^\w$])([A-Za-z_$][\w$]*)(\s*\[\s*)(["'])([^"']+)\4(\s*\])/g;
+    /(^|[^\w$.])([A-Za-z_$][\w$]*)(\s*\[\s*)(["'])([^"']+)\4(\s*\])/g;
 
   let match;
   while ((match = dotReferenceRegExp.exec(lineInfo.text)) !== null) {

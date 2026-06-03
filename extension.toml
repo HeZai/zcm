@@ -1,6 +1,6 @@
 id = "zcm"
 name = "zcm"
-version = "0.1.0"
+version = "0.2.0"
 schema_version = 1
 authors = ["Hezai <yhwyym23929@163.com>"]
 description = "CSS Modules completions and navigation with SCSS, Sass, and Less support."
@@ -8,13 +8,15 @@ repository = "https://github.com/HeZai/zcm"
 
 [language_servers.zcm]
 name = "zcm"
-languages = ["JavaScript", "TypeScript", "TSX", "Vue.js", "CSS", "SCSS", "LESS"]
+languages = ["JavaScript", "JSX", "TypeScript", "TSX", "Vue.js", "CSS", "SCSS", "SASS", "LESS"]
 
 [language_servers.zcm.language_ids]
 "JavaScript" = "javascript"
+"JSX" = "javascriptreact"
 "TypeScript" = "typescript"
 "TSX" = "typescriptreact"
 "Vue.js" = "vue"
 "CSS" = "css"
 "SCSS" = "scss"
+"SASS" = "sass"
 "LESS" = "less"
