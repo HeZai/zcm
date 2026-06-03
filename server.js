@@ -8,7 +8,7 @@ const { fileURLToPath, pathToFileURL } = require("node:url");
 const STYLE_EXTENSIONS = ["css", "scss", "sass", "less"];
 const CSS_MODULE_EXTENSION = "module";
 const MINIMUM_NODE_MAJOR_VERSION = 18;
-const SOURCE_EXTENSIONS = new Set([".js", ".ts", ".tsx"]);
+const SOURCE_EXTENSIONS = new Set([".js", ".ts", ".tsx", ".vue"]);
 const SKIPPED_DIRECTORIES = new Set([
   ".git",
   ".next",

@@ -8,12 +8,13 @@ repository = "https://github.com/HeZai/zcm"
 
 [language_servers.zcm]
 name = "zcm"
-languages = ["JavaScript", "TypeScript", "TSX", "CSS", "SCSS", "LESS"]
+languages = ["JavaScript", "TypeScript", "TSX", "Vue.js", "CSS", "SCSS", "LESS"]
 
 [language_servers.zcm.language_ids]
 "JavaScript" = "javascript"
 "TypeScript" = "typescript"
 "TSX" = "typescriptreact"
+"Vue.js" = "vue"
 "CSS" = "css"
 "SCSS" = "scss"
 "LESS" = "less"

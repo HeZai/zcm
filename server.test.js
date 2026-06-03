@@ -158,7 +158,7 @@ test("finds stylesheet class references at the cursor position", () => {
   );
 });
 
-test("registers zcm for stylesheet languages", () => {
+test("registers zcm for source, stylesheet, and Vue languages", () => {
   const extensionToml = fs.readFileSync(
     path.join(__dirname, "extension.toml"),
     "utf8",
@@ -166,11 +166,12 @@ test("registers zcm for stylesheet languages", () => {
 
   assert.match(
     extensionToml,
-    /languages = \["JavaScript", "TypeScript", "TSX", "CSS", "SCSS", "LESS"\]/,
+    /languages = \["JavaScript", "TypeScript", "TSX", "Vue\.js", "CSS", "SCSS", "LESS"\]/,
   );
   assert.match(extensionToml, /"CSS" = "css"/);
   assert.match(extensionToml, /"SCSS" = "scss"/);
   assert.match(extensionToml, /"LESS" = "less"/);
+  assert.match(extensionToml, /"Vue\.js" = "vue"/);
 });
 
 test("finds css module imports with extensionless fallback", () => {
@@ -242,6 +243,18 @@ test("collects references only from sources importing the same stylesheet", () =
     "utf8",
   );
   fs.writeFileSync(
+    path.join(root, "Button.vue"),
+    [
+      "<script setup>",
+      'import styles from "./Button.css";',
+      "</script>",
+      "<template>",
+      '  <button :class="styles.primaryButton"></button>',
+      "</template>",
+    ].join("\n"),
+    "utf8",
+  );
+  fs.writeFileSync(
     path.join(root, "Wrong.tsx"),
     'import styles from "./Other.css";\nstyles.primaryButton;',
     "utf8",
@@ -261,7 +274,7 @@ test("collects references only from sources importing the same stylesheet", () =
 
   assert.deepEqual(
     references.map(reference => path.basename(filePathFromUri(reference.uri))),
-    ["Alias.ts", "Button.tsx"],
+    ["Alias.ts", "Button.tsx", "Button.vue"],
   );
 });
 
