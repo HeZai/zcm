@@ -13,6 +13,13 @@ This repository contains a Zed CSS Modules extension named `zcm`. Rust extension
 - `cargo clippy --all-targets`: runs Rust lint checks when Clippy is installed.
 - `cargo build --target wasm32-wasip1 --release`: builds a release WASM artifact for Zed when the target is installed.
 
+## Zed Extension Reference
+
+- Zed extensions overview: https://zed.dev/docs/extensions
+- Developing extensions: https://zed.dev/docs/extensions/developing-extensions
+- Language extensions: https://zed.dev/docs/extensions/languages
+- Rust extension API: https://docs.rs/zed_extension_api/latest/zed_extension_api/
+
 ## Coding Style & Naming Conventions
 
 Use Rust 2021 defaults and `cargo fmt`; prefer four-space indentation and `snake_case` for Rust functions, modules, and variables. Keep constants in `SCREAMING_SNAKE_CASE`. JavaScript uses CommonJS, `"use strict"`, two-space indentation, semicolons, and descriptive camelCase helpers such as `resolveRelativeStylesheetImport`. Keep parsing and path logic small and covered by tests.
