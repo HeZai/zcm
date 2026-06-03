@@ -1,6 +1,6 @@
 # zcm
 
-zcm is a CSS Modules language service extension for Zed with direct support for CSS, SCSS, Sass, and Less stylesheet modules. It is based on `cssmodules-language-server@1.5.2` and provides CSS Modules class name completion, go-to-definition, hover, and reference lookup for JavaScript, TypeScript, TSX, and common stylesheet files.
+zcm is a CSS Modules language service extension for Zed with direct support for CSS, SCSS, Sass, and Less stylesheet modules. It is based on `cssmodules-language-server@1.5.2` and provides CSS Modules class name completion, go-to-definition, hover, and reference lookup for JavaScript, TypeScript, TSX, JSX, Vue, and common stylesheet files.
 
 ## Features
 
@@ -8,6 +8,7 @@ zcm is a CSS Modules language service extension for Zed with direct support for 
 - Go to definition: jumps from references such as `styles.foo` and `styles["foo-bar"]` to the corresponding stylesheet class declaration.
 - Hover: shows language service style information for CSS Modules class name references.
 - Find references: finds usages of the same class name from CSS Modules references in source files.
+- Vue support: resolves CSS Modules imports and finds alias references inside `.vue` single-file components.
 - SCSS, Sass, and Less support: resolves and serves CSS Modules from `.scss`, `.sass`, and `.less` stylesheets as first-class module sources.
 - Reverse lookup from stylesheet declarations: running Find All References on class declarations in CSS, SCSS, Sass, or Less files can locate source positions that import and use that class name.
 - Extensionless import resolution: supports relative imports that omit the stylesheet extension, such as `import styles from "./Button"` and `import styles from "./Button.module"`.
@@ -26,8 +27,11 @@ zcm registers with the following Zed languages:
 - JavaScript
 - TypeScript
 - TSX
+- JSX
+- Vue.js
 - CSS
 - SCSS
+- SASS
 - LESS
 
 Supported stylesheet imports include:
@@ -50,10 +54,9 @@ Explicit imports of files with other extensions, such as `./foo.txt`, are ignore
 
 - Only relative imports are handled. `tsconfig` path aliases, bundler aliases, and framework-specific path aliases are not supported.
 - Supported stylesheet suffixes are limited to `css`, `scss`, `sass`, and `less`.
-- Find All References only scans JavaScript, TypeScript, and TSX files in the workspace.
+- Find All References scans common JavaScript and TypeScript source files, including JS, JSX, MJS, CJS, TS, TSX, MTS, CTS, and Vue files in the workspace.
 - Reference matching only covers CSS Modules alias forms such as `styles.foo` and `styles["foo-bar"]`, plus stylesheet class declarations imported through those aliases.
 - Plain string class names, such as `className="foo"`, are not treated as references.
-- JSX files are not registered in the initial language scope.
 
 ## License
 

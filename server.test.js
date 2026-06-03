@@ -7,6 +7,7 @@ const test = require("node:test");
 const {
   collectWorkspaceReferences,
   createInitializeResult,
+  findClassReferenceAtPosition,
   findClassReferencesInContent,
   findCssModuleImports,
   findImportPathWithExtensionlessFallback,
@@ -51,6 +52,28 @@ test("falls back to extensionless import resolution after upstream misses", () =
   const dir = tempDir();
   fs.writeFileSync(path.join(dir, "Button.css"), ".primaryButton {}", "utf8");
   const fileContent = 'import styles from "./Button";';
+
+  assert.equal(
+    findImportPathWithExtensionlessFallback(() => "", fileContent, "styles", dir),
+    path.join(dir, "Button.css"),
+  );
+});
+
+test("falls back to spaced extensionless require imports after upstream misses", () => {
+  const dir = tempDir();
+  fs.writeFileSync(path.join(dir, "Button.css"), ".primaryButton {}", "utf8");
+  const fileContent = 'const styles = require( "./Button" );';
+
+  assert.equal(
+    findImportPathWithExtensionlessFallback(() => "", fileContent, "styles", dir),
+    path.join(dir, "Button.css"),
+  );
+});
+
+test("falls back to extensionless default imports with named bindings", () => {
+  const dir = tempDir();
+  fs.writeFileSync(path.join(dir, "Button.css"), ".primaryButton {}", "utf8");
+  const fileContent = 'import styles, { tokens } from "./Button";';
 
   assert.equal(
     findImportPathWithExtensionlessFallback(() => "", fileContent, "styles", dir),
@@ -130,6 +153,34 @@ test("does not crash when workspace folder change events are unsupported", () =>
   );
 });
 
+test("updates workspace roots on workspace folder changes", () => {
+  let handler;
+  const connection = {
+    workspace: {
+      onDidChangeWorkspaceFolders(callback) {
+        handler = callback;
+      },
+    },
+  };
+  const referencesProvider = {
+    _workspaceRoots: ["/workspace/old", "/workspace/stays"],
+    updateWorkspaceRoots(workspaceRoots) {
+      this._workspaceRoots = workspaceRoots;
+    },
+  };
+
+  registerWorkspaceFolderChangeHandler(connection, referencesProvider);
+  handler({
+    added: [{ uri: pathToFileUri("/workspace/new") }],
+    removed: [{ uri: pathToFileUri("/workspace/old") }],
+  });
+
+  assert.deepEqual(referencesProvider._workspaceRoots, [
+    "/workspace/stays",
+    "/workspace/new",
+  ]);
+});
+
 test("finds stylesheet class references at the cursor position", () => {
   const content = [
     ".primary-button {",
@@ -158,7 +209,7 @@ test("finds stylesheet class references at the cursor position", () => {
   );
 });
 
-test("registers zcm for stylesheet languages", () => {
+test("registers zcm for source, stylesheet, Sass, and Vue languages", () => {
   const extensionToml = fs.readFileSync(
     path.join(__dirname, "extension.toml"),
     "utf8",
@@ -166,22 +217,29 @@ test("registers zcm for stylesheet languages", () => {
 
   assert.match(
     extensionToml,
-    /languages = \["JavaScript", "TypeScript", "TSX", "CSS", "SCSS", "LESS"\]/,
+    /languages = \["JavaScript", "JSX", "TypeScript", "TSX", "Vue\.js", "CSS", "SCSS", "SASS", "LESS"\]/,
   );
   assert.match(extensionToml, /"CSS" = "css"/);
+  assert.match(extensionToml, /"JSX" = "javascriptreact"/);
   assert.match(extensionToml, /"SCSS" = "scss"/);
+  assert.match(extensionToml, /"SASS" = "sass"/);
   assert.match(extensionToml, /"LESS" = "less"/);
+  assert.match(extensionToml, /"Vue\.js" = "vue"/);
 });
 
 test("finds css module imports with extensionless fallback", () => {
   const dir = tempDir();
   fs.writeFileSync(path.join(dir, "Button.css"), ".primary-button {}", "utf8");
   fs.writeFileSync(path.join(dir, "Panel.less"), ".panel-body {}", "utf8");
+  fs.writeFileSync(path.join(dir, "Theme.module.scss"), ".theme {}", "utf8");
+  fs.writeFileSync(path.join(dir, "Badge.module.sass"), ".badge\n  color: red", "utf8");
 
   assert.deepEqual(
     findCssModuleImports(
       [
         'import styles from "./Button";',
+        'import theme, { tokens } from "./Theme.module";',
+        'import badge from "./Badge.module";',
         'const panel = require("./Panel.less");',
         'import text from "./notes.txt";',
         'import theme from "theme/Button.css";',
@@ -193,6 +251,16 @@ test("finds css module imports with extensionless fallback", () => {
         importName: "styles",
         importPath: path.join(dir, "Button.css"),
         specifier: "./Button",
+      },
+      {
+        importName: "theme",
+        importPath: path.join(dir, "Theme.module.scss"),
+        specifier: "./Theme.module",
+      },
+      {
+        importName: "badge",
+        importPath: path.join(dir, "Badge.module.sass"),
+        specifier: "./Badge.module",
       },
       {
         importName: "panel",
@@ -227,6 +295,38 @@ test("finds dot and bracket class references for an import alias", () => {
   );
 });
 
+test("ignores class references when the alias is used as an object property", () => {
+  const content = [
+    'import styles from "./Button.css";',
+    "const a = theme.styles.primaryButton;",
+    "const b = theme.styles['panel-body'];",
+    "const c = styles.primaryButton;",
+    'const d = styles["panel-body"];',
+  ].join("\n");
+
+  assert.deepEqual(
+    findClassReferencesInContent(content, "styles", "primaryButton").map(
+      reference => reference.range,
+    ),
+    [rangeFor(content, "primaryButton", 1)],
+  );
+  assert.deepEqual(
+    findClassReferencesInContent(content, "styles", "panel-body").map(
+      reference => reference.range,
+    ),
+    [rangeFor(content, "panel-body", 1)],
+  );
+});
+
+test("does not find a class reference at object property positions", () => {
+  const content = "const a = theme.styles.primaryButton;";
+
+  assert.equal(
+    findClassReferenceAtPosition(content, rangeFor(content, "primaryButton").start),
+    null,
+  );
+});
+
 test("collects references only from sources importing the same stylesheet", () => {
   const root = tempDir();
   fs.writeFileSync(path.join(root, "Button.css"), ".primaryButton {}", "utf8");
@@ -242,6 +342,43 @@ test("collects references only from sources importing the same stylesheet", () =
     "utf8",
   );
   fs.writeFileSync(
+    path.join(root, "Button.vue"),
+    [
+      "<script setup>",
+      'import styles from "./Button.css";',
+      "</script>",
+      "<template>",
+      '  <button :class="styles.primaryButton"></button>',
+      "</template>",
+    ].join("\n"),
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(root, "Button.jsx"),
+    'import styles from "./Button";\nstyles.primaryButton;',
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(root, "Module.mjs"),
+    'import styles from "./Button";\nstyles.primaryButton;',
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(root, "Common.cjs"),
+    'const styles = require("./Button");\nstyles.primaryButton;',
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(root, "Typed.mts"),
+    'import styles from "./Button";\nstyles.primaryButton;',
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(root, "TypedCommon.cts"),
+    'const styles = require("./Button");\nstyles.primaryButton;',
+    "utf8",
+  );
+  fs.writeFileSync(
     path.join(root, "Wrong.tsx"),
     'import styles from "./Other.css";\nstyles.primaryButton;',
     "utf8",
@@ -252,6 +389,14 @@ test("collects references only from sources importing the same stylesheet", () =
     'import styles from "../Button.css";\nstyles.primaryButton;',
     "utf8",
   );
+  for (const skippedDirectory of [".cache", ".nuxt", ".svelte-kit", ".turbo"]) {
+    fs.mkdirSync(path.join(root, skippedDirectory));
+    fs.writeFileSync(
+      path.join(root, skippedDirectory, "Ignored.tsx"),
+      'import styles from "../Button.css";\nstyles.primaryButton;',
+      "utf8",
+    );
+  }
 
   const references = collectWorkspaceReferences(
     [root],
@@ -261,7 +406,16 @@ test("collects references only from sources importing the same stylesheet", () =
 
   assert.deepEqual(
     references.map(reference => path.basename(filePathFromUri(reference.uri))),
-    ["Alias.ts", "Button.tsx"],
+    [
+      "Alias.ts",
+      "Button.jsx",
+      "Button.tsx",
+      "Button.vue",
+      "Common.cjs",
+      "Module.mjs",
+      "Typed.mts",
+      "TypedCommon.cts",
+    ],
   );
 });
 
@@ -324,4 +478,8 @@ function positionAt(content, offset) {
 
 function filePathFromUri(uri) {
   return new URL(uri).pathname;
+}
+
+function pathToFileUri(filePath) {
+  return new URL(`file://${filePath}`).href;
 }
